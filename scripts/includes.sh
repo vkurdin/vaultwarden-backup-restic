@@ -334,7 +334,7 @@ function init_env() {
 
     # RESTIC_COMMAND
     local RESTIC_RCLONE_ARGS="serve restic --stdio --b2-hard-delete ${RCLONE_GLOBAL_FLAG}"
-    RESTIC_COMMAND="restic --compression max --host \"${RESTIC_HOST}\" -o rclone.args=\"${RESTIC_RCLONE_ARGS}\""
+    RESTIC_COMMAND="restic --compression max -o rclone.args=\"${RESTIC_RCLONE_ARGS}\""
 
     # ZIP_ENABLE
     get_env ZIP_ENABLE
@@ -402,6 +402,7 @@ function init_env() {
     color yellow "RCLONE_GLOBAL_FLAG: ${RCLONE_GLOBAL_FLAG}"
     color yellow "RESTIC_ENABLE: ${RESTIC_ENABLE}"
     color yellow "RESTIC_COMMAND: ${RESTIC_COMMAND}"
+    color yellow "RESTIC_HOST: ${RESTIC_HOST}"
     color yellow "RESTIC_PASSWORD: ${RESTIC_PASSWORD}"
     color yellow "ZIP_ENABLE: ${ZIP_ENABLE}"
     color yellow "ZIP_PASSWORD: ${#ZIP_PASSWORD} Chars"
