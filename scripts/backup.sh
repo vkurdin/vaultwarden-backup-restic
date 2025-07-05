@@ -222,14 +222,16 @@ function upload() {
     do
         color blue "upload backup file to storage system $(color yellow "[${RCLONE_REMOTE_X}]")"
 
-        if [[ "${RESTIC_ENABLE}" == "TRUE"]]; then
+        if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
+            local RESTIC_COMMAND_X="${RESTIC_COMMAND} -r \"rclone:${RCLONE_REMOTE_X}\""
+
             # check if repo already initialized
-            eval "${RESTIC_COMMAND} cat config"
+            eval "${RESTIC_COMMAND_X} cat config"
             local RESTIC_EXIT_CODE=$?
 
             if [[ $RESTIC_EXIT_CODE == 10 ]]; then
                 # init repo if not exist
-                eval "${RESTIC_COMMAND} init"
+                eval "${RESTIC_COMMAND_X} init"
                 RESTIC_EXIT_CODE=$?
 
                 if [[ $RESTIC_EXIT_CODE != 0 ]]; then
@@ -248,7 +250,7 @@ function upload() {
 
             if [[ $RESTIC_EXIT_CODE == 0 ]]; then
                 # do the backup
-                eval "${RESTIC_COMMAND} backup \"${UPLOAD_FILE}\""
+                eval "${RESTIC_COMMAND_X} backup \"${UPLOAD_FILE}\""
                 if [[ $? != 0 ]]; then
                     color red "upload failed"
 
@@ -279,7 +281,17 @@ function clear_history() {
             color blue "delete ${BACKUP_KEEP_DAYS} days ago backup files $(color yellow "[${RCLONE_REMOTE_X}]")"
 
             if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
+                local RESTIC_COMMAND_X="${RESTIC_COMMAND} -r \"rclone:${RCLONE_REMOTE_X}\""
                 
+                eval "${RESTIC_COMMAND_X} forget --prune --keep-within \"${BACKUP_KEEP_DAYS}d\""
+                if [[ $? != 0 ]]; then
+                    color red "removing old snapshots failed"
+                else
+                    eval "${RESTIC_COMMAND_X} check"
+                    if [[ $? != 0 ]]; then
+                        color red "checking repository failed"
+                    fi
+                fi
             else
                 mapfile -t RCLONE_DELETE_LIST < <(rclone ${RCLONE_GLOBAL_FLAG} lsf "${RCLONE_REMOTE_X}" --min-age "${BACKUP_KEEP_DAYS}d")
 
