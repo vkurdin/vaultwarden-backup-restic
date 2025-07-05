@@ -96,11 +96,21 @@ function backup_rsakey() {
     local FIND_RSAKEY_COUNT=$(echo "${FIND_RSAKEY}" | wc -l)
 
     if [[ "${FIND_RSAKEY_COUNT}" -gt 0 ]]; then
-        echo "${FIND_RSAKEY}" | tar -c -C "${DATA_RSAKEY_DIRNAME}" -f "${BACKUP_FILE_RSAKEY}" -T -
+        if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
+            mkdir -p "${BACKUP_FILE_RSAKEY}"
 
-        color blue "display rsakey tar file list"
+            echo "${FIND_RSAKEY}" | xargs cp -t "${BACKUP_FILE_RSAKEY}"
 
-        tar -tf "${BACKUP_FILE_RSAKEY}"
+            color blue "display rsakey file list"
+
+            find "${BACKUP_FILE_RSAKEY}"
+        else
+            echo "${FIND_RSAKEY}" | tar -c -C "${DATA_RSAKEY_DIRNAME}" -f "${BACKUP_FILE_RSAKEY}" -T -
+
+            color blue "display rsakey tar file list"
+
+            tar -tf "${BACKUP_FILE_RSAKEY}"
+        fi
     else
         color yellow "not found vaultwarden rsakey, skipping"
     fi
@@ -110,11 +120,21 @@ function backup_attachments() {
     color blue "backup vaultwarden attachments"
 
     if [[ -d "${DATA_ATTACHMENTS}" ]]; then
-        tar -c -C "${DATA_ATTACHMENTS_DIRNAME}" -f "${BACKUP_FILE_ATTACHMENTS}" "${DATA_ATTACHMENTS_BASENAME}"
+        if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
+            mkdir -p "${BACKUP_FILE_ATTACHMENTS}"
 
-        color blue "display attachments tar file list"
+            cp -rf "${DATA_ATTACHMENTS_DIRNAME}" "${BACKUP_FILE_ATTACHMENTS}"
 
-        tar -tf "${BACKUP_FILE_ATTACHMENTS}"
+            color blue "display attachments file list"
+
+            find "${BACKUP_FILE_ATTACHMENTS}"
+        else
+            tar -c -C "${DATA_ATTACHMENTS_DIRNAME}" -f "${BACKUP_FILE_ATTACHMENTS}" "${DATA_ATTACHMENTS_BASENAME}"
+
+            color blue "display attachments tar file list"
+
+            tar -tf "${BACKUP_FILE_ATTACHMENTS}"
+        fi
     else
         color yellow "not found vaultwarden attachments directory, skipping"
     fi
@@ -124,11 +144,21 @@ function backup_sends() {
     color blue "backup vaultwarden sends"
 
     if [[ -d "${DATA_SENDS}" ]]; then
-        tar -c -C "${DATA_SENDS_DIRNAME}" -f "${BACKUP_FILE_SENDS}" "${DATA_SENDS_BASENAME}"
+        if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
+            mkdir -p "${BACKUP_FILE_SENDS}"
 
-        color blue "display sends tar file list"
+            cp -rf "${DATA_SENDS_DIRNAME}" "${BACKUP_FILE_SENDS}"
 
-        tar -tf "${BACKUP_FILE_SENDS}"
+            color blue "display sends file list"
+
+            find "${BACKUP_FILE_SENDS}"
+        else
+            tar -c -C "${DATA_SENDS_DIRNAME}" -f "${BACKUP_FILE_SENDS}" "${DATA_SENDS_BASENAME}"
+
+            color blue "display sends tar file list"
+
+            tar -tf "${BACKUP_FILE_SENDS}"
+        fi
     else
         color yellow "not found vaultwarden sends directory, skipping"
     fi
@@ -152,7 +182,7 @@ function backup() {
 }
 
 function backup_package() {
-    if [[ "${ZIP_ENABLE}" == "TRUE" ]]; then
+    if [[ "${ZIP_ENABLE}" == "TRUE" && "${RESTIC_ENABLE}" == "FALSE" ]]; then
         color blue "package backup file"
 
         UPLOAD_FILE="${BACKUP_FILE_ZIP}"
@@ -192,11 +222,46 @@ function upload() {
     do
         color blue "upload backup file to storage system $(color yellow "[${RCLONE_REMOTE_X}]")"
 
-        rclone ${RCLONE_GLOBAL_FLAG} copy "${UPLOAD_FILE}" "${RCLONE_REMOTE_X}"
-        if [[ $? != 0 ]]; then
-            color red "upload failed"
+        if [[ "${RESTIC_ENABLE}" == "TRUE"]]; then
+            # check if repo already initialized
+            eval "${RESTIC_COMMAND} cat config"
+            local RESTIC_EXIT_CODE=$?
 
-            HAS_ERROR="TRUE"
+            if [[ $RESTIC_EXIT_CODE == 10 ]]; then
+                # init repo if not exist
+                eval "${RESTIC_COMMAND} init"
+                RESTIC_EXIT_CODE=$?
+
+                if [[ $RESTIC_EXIT_CODE != 0 ]]; then
+                    color red "restic repository initializing failed"
+
+                    HAS_ERROR=TRUE
+                else 
+                    # override exit code 10 from "cat config" command
+                    RESTIC_EXIT_CODE=0
+                fi
+            elif [[ $RESTIC_EXIT_CODE != 0 ]]; then
+                color red "restic repository probe failed"
+
+                HAS_ERROR="TRUE"
+            fi
+
+            if [[ $RESTIC_EXIT_CODE == 0 ]]; then
+                # do the backup
+                eval "${RESTIC_COMMAND} backup \"${UPLOAD_FILE}\""
+                if [[ $? != 0 ]]; then
+                    color red "upload failed"
+
+                    HAS_ERROR="TRUE"
+                fi
+            fi
+        else
+            rclone ${RCLONE_GLOBAL_FLAG} copy "${UPLOAD_FILE}" "${RCLONE_REMOTE_X}"
+            if [[ $? != 0 ]]; then
+                color red "upload failed"
+
+                HAS_ERROR="TRUE"
+            fi
         fi
     done
 
@@ -213,17 +278,21 @@ function clear_history() {
         do
             color blue "delete ${BACKUP_KEEP_DAYS} days ago backup files $(color yellow "[${RCLONE_REMOTE_X}]")"
 
-            mapfile -t RCLONE_DELETE_LIST < <(rclone ${RCLONE_GLOBAL_FLAG} lsf "${RCLONE_REMOTE_X}" --min-age "${BACKUP_KEEP_DAYS}d")
+            if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
+                
+            else
+                mapfile -t RCLONE_DELETE_LIST < <(rclone ${RCLONE_GLOBAL_FLAG} lsf "${RCLONE_REMOTE_X}" --min-age "${BACKUP_KEEP_DAYS}d")
 
-            for RCLONE_DELETE_FILE in "${RCLONE_DELETE_LIST[@]}"
-            do
-                color yellow "deleting \"${RCLONE_DELETE_FILE}\""
+                for RCLONE_DELETE_FILE in "${RCLONE_DELETE_LIST[@]}"
+                do
+                    color yellow "deleting \"${RCLONE_DELETE_FILE}\""
 
-                rclone ${RCLONE_GLOBAL_FLAG} delete "${RCLONE_REMOTE_X}/${RCLONE_DELETE_FILE}"
-                if [[ $? != 0 ]]; then
-                    color red "delete \"${RCLONE_DELETE_FILE}\" failed"
-                fi
-            done
+                    rclone ${RCLONE_GLOBAL_FLAG} delete "${RCLONE_REMOTE_X}/${RCLONE_DELETE_FILE}"
+                    if [[ $? != 0 ]]; then
+                        color red "delete \"${RCLONE_DELETE_FILE}\" failed"
+                    fi
+                done
+            fi
         done
     fi
 }

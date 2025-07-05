@@ -309,6 +309,7 @@ function init_env() {
     init_env_display
     init_env_ping
     init_env_mail
+    init_env_restic
 
     # CRON
     get_env CRON
@@ -330,6 +331,10 @@ function init_env() {
     # RCLONE_GLOBAL_FLAG
     get_env RCLONE_GLOBAL_FLAG
     RCLONE_GLOBAL_FLAG="${RCLONE_GLOBAL_FLAG:-""}"
+
+    # RESTIC_COMMAND
+    local RESTIC_RCLONE_ARGS="serve restic --stdio --b2-hard-delete ${RCLONE_GLOBAL_FLAG}"
+    RESTIC_COMMAND="restic --compression max --host \"${RESTIC_HOST}\" -o rclone.args=\"${RESTIC_RCLONE_ARGS}\""
 
     # ZIP_ENABLE
     get_env ZIP_ENABLE
@@ -395,6 +400,9 @@ function init_env() {
     done
 
     color yellow "RCLONE_GLOBAL_FLAG: ${RCLONE_GLOBAL_FLAG}"
+    color yellow "RESTIC_ENABLE: ${RESTIC_ENABLE}"
+    color yellow "RESTIC_COMMAND: ${RESTIC_COMMAND}"
+    color yellow "RESTIC_PASSWORD: ${RESTIC_PASSWORD}"
     color yellow "ZIP_ENABLE: ${ZIP_ENABLE}"
     color yellow "ZIP_PASSWORD: ${#ZIP_PASSWORD} Chars"
     color yellow "ZIP_TYPE: ${ZIP_TYPE}"
@@ -589,4 +597,23 @@ function init_env_mail() {
     else
         MAIL_WHEN_FAILURE="TRUE"
     fi
+}
+
+function init_env_restic() {
+    # RESTIC_ENABLE
+    get_env RESTIC_ENABLE
+
+    if [[ "${RESTIC_ENABLE^^}" == "FALSE" ]]; then
+        RESTIC_ENABLE="FALSE"
+    else
+        RESTIC_ENABLE="TRUE"
+    fi
+
+    # RESTIC_PASSWORD
+    get_env RESTIC_PASSWORD
+    RESTIC_PASSWORD="${RESTIC_PASSWORD:-"WHEREISMYPASSWORD?"}"
+
+    # RESTIC_HOST
+    get_env RESTIC_HOST
+    RESTIC_HOST="${RESTIC_HOST:-"vaultwarden-backup"}"
 }

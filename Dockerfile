@@ -9,6 +9,8 @@ ENV LOCALTIME_FILE="/tmp/localtime"
 
 COPY scripts/*.sh /app/
 
+COPY --from=restic/restic:0.18.0 /usr/bin/restic /usr/bin/restic
+
 RUN chmod +x /app/*.sh \
   && mkdir -m 777 /bitwarden \
   && apk add --no-cache 7zip bash curl mariadb-client postgresql17-client sqlite supercronic s-nail tzdata \
