@@ -250,7 +250,7 @@ function upload() {
 
             if [[ $RESTIC_EXIT_CODE == 0 ]]; then
                 # do the backup
-                eval "${RESTIC_COMMAND_X} backup \"${UPLOAD_FILE}\""
+                eval "${RESTIC_COMMAND_X} --host \"${RESTIC_HOST}\" backup \"${UPLOAD_FILE}\""
                 if [[ $? != 0 ]]; then
                     color red "upload failed"
 
