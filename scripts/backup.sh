@@ -123,7 +123,7 @@ function backup_attachments() {
         if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
             mkdir -p "${BACKUP_FILE_ATTACHMENTS}"
 
-            cp -rpf "${DATA_ATTACHMENTS_DIRNAME}" "${BACKUP_FILE_ATTACHMENTS}"
+            cp -rpf "${DATA_ATTACHMENTS}" "${BACKUP_FILE_ATTACHMENTS}"
 
             color blue "display attachments file list"
 
@@ -147,7 +147,7 @@ function backup_sends() {
         if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
             mkdir -p "${BACKUP_FILE_SENDS}"
 
-            cp -rpf "${DATA_SENDS_DIRNAME}" "${BACKUP_FILE_SENDS}"
+            cp -rpf "${DATA_SENDS}" "${BACKUP_FILE_SENDS}"
 
             color blue "display sends file list"
 
