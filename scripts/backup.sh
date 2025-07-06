@@ -17,11 +17,14 @@ function backup_init() {
     # backup vaultwarden config file
     BACKUP_FILE_CONFIG="${BACKUP_DIR}/config.${NOW}.json"
     # backup vaultwarden rsakey files
-    BACKUP_FILE_RSAKEY="${BACKUP_DIR}/rsakey.${NOW}.tar"
+    BACKUP_FILE_RSAKEY="${BACKUP_DIR}/rsakey.${NOW}"
+    BACKUP_FILE_RSAKEY_TAR="${BACKUP_FILE_RSAKEY}.tar"
     # backup vaultwarden attachments directory
-    BACKUP_FILE_ATTACHMENTS="${BACKUP_DIR}/attachments.${NOW}.tar"
+    BACKUP_FILE_ATTACHMENTS="${BACKUP_DIR}/attachments.${NOW}"
+    BACKUP_FILE_ATTACHMENTS_TAR="${BACKUP_FILE_ATTACHMENTS}.tar"
     # backup vaultwarden sends directory
-    BACKUP_FILE_SENDS="${BACKUP_DIR}/sends.${NOW}.tar"
+    BACKUP_FILE_SENDS="${BACKUP_DIR}/sends.${NOW}"
+    BACKUP_FILE_SENDS_TAR="${BACKUP_FILE_SENDS}.tar"
     # backup zip file
     BACKUP_FILE_ZIP="${BACKUP_DIR}/backup.${NOW}.${ZIP_TYPE}"
 }
@@ -99,13 +102,13 @@ function backup_rsakey() {
         if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
             mkdir -p "${BACKUP_FILE_RSAKEY}"
 
-            echo "${FIND_RSAKEY}" | xargs cp -pt "${BACKUP_FILE_RSAKEY}"
+            echo "${FIND_RSAKEY}" | xargs -I {} cp -p "${DATA_RSAKEY_DIRNAME}/{}" "${BACKUP_FILE_RSAKEY}"
 
             color blue "display rsakey file list"
 
             find "${BACKUP_FILE_RSAKEY}"
         else
-            echo "${FIND_RSAKEY}" | tar -c -C "${DATA_RSAKEY_DIRNAME}" -f "${BACKUP_FILE_RSAKEY}" -T -
+            echo "${FIND_RSAKEY}" | tar -c -C "${DATA_RSAKEY_DIRNAME}" -f "${BACKUP_FILE_RSAKEY_TAR}" -T -
 
             color blue "display rsakey tar file list"
 
@@ -129,7 +132,7 @@ function backup_attachments() {
 
             find "${BACKUP_FILE_ATTACHMENTS}"
         else
-            tar -c -C "${DATA_ATTACHMENTS_DIRNAME}" -f "${BACKUP_FILE_ATTACHMENTS}" "${DATA_ATTACHMENTS_BASENAME}"
+            tar -c -C "${DATA_ATTACHMENTS_DIRNAME}" -f "${BACKUP_FILE_ATTACHMENTS_TAR}" "${DATA_ATTACHMENTS_BASENAME}"
 
             color blue "display attachments tar file list"
 
@@ -153,7 +156,7 @@ function backup_sends() {
 
             find "${BACKUP_FILE_SENDS}"
         else
-            tar -c -C "${DATA_SENDS_DIRNAME}" -f "${BACKUP_FILE_SENDS}" "${DATA_SENDS_BASENAME}"
+            tar -c -C "${DATA_SENDS_DIRNAME}" -f "${BACKUP_FILE_SENDS_TAR}" "${DATA_SENDS_BASENAME}"
 
             color blue "display sends tar file list"
 
