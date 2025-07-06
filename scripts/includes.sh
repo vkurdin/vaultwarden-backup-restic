@@ -403,7 +403,7 @@ function init_env() {
     color yellow "RESTIC_ENABLE: ${RESTIC_ENABLE}"
     color yellow "RESTIC_COMMAND: ${RESTIC_COMMAND}"
     color yellow "RESTIC_HOST: ${RESTIC_HOST}"
-    color yellow "RESTIC_PASSWORD: ${RESTIC_PASSWORD}"
+    color yellow "RESTIC_PASSWORD: ${#RESTIC_PASSWORD} Chars"
     color yellow "ZIP_ENABLE: ${ZIP_ENABLE}"
     color yellow "ZIP_PASSWORD: ${#ZIP_PASSWORD} Chars"
     color yellow "ZIP_TYPE: ${ZIP_TYPE}"
