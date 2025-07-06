@@ -83,7 +83,7 @@ function backup_config() {
     color blue "backup vaultwarden config"
 
     if [[ -f "${DATA_CONFIG}" ]]; then
-        cp -f "${DATA_CONFIG}" "${BACKUP_FILE_CONFIG}"
+        cp -f --preserve=timestamps,mode "${DATA_CONFIG}" "${BACKUP_FILE_CONFIG}"
     else
         color yellow "not found vaultwarden config, skipping"
     fi
@@ -99,7 +99,7 @@ function backup_rsakey() {
         if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
             mkdir -p "${BACKUP_FILE_RSAKEY}"
 
-            echo "${FIND_RSAKEY}" | xargs cp -t "${BACKUP_FILE_RSAKEY}"
+            echo "${FIND_RSAKEY}" | xargs cp --preserve=timestamps,mode -t "${BACKUP_FILE_RSAKEY}"
 
             color blue "display rsakey file list"
 
@@ -123,7 +123,7 @@ function backup_attachments() {
         if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
             mkdir -p "${BACKUP_FILE_ATTACHMENTS}"
 
-            cp -rf "${DATA_ATTACHMENTS_DIRNAME}" "${BACKUP_FILE_ATTACHMENTS}"
+            cp -rf --preserve=timestamps,mode "${DATA_ATTACHMENTS_DIRNAME}" "${BACKUP_FILE_ATTACHMENTS}"
 
             color blue "display attachments file list"
 
@@ -147,7 +147,7 @@ function backup_sends() {
         if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
             mkdir -p "${BACKUP_FILE_SENDS}"
 
-            cp -rf "${DATA_SENDS_DIRNAME}" "${BACKUP_FILE_SENDS}"
+            cp -rf --preserve=timestamps,mode "${DATA_SENDS_DIRNAME}" "${BACKUP_FILE_SENDS}"
 
             color blue "display sends file list"
 
