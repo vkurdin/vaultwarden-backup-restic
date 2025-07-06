@@ -253,6 +253,7 @@ function upload() {
 
             if [[ $RESTIC_EXIT_CODE == 0 ]]; then
                 # do the backup
+                eval "${RESTIC_COMMAND_X} unlock
                 eval "${RESTIC_COMMAND_X} --host \"${RESTIC_HOST}\" backup \"${UPLOAD_FILE}\""
                 if [[ $? != 0 ]]; then
                     color red "upload failed"
@@ -286,6 +287,7 @@ function clear_history() {
             if [[ "${RESTIC_ENABLE}" == "TRUE" ]]; then
                 local RESTIC_COMMAND_X="${RESTIC_COMMAND} -r \"rclone:${RCLONE_REMOTE_X}\""
                 
+                eval "${RESTIC_COMMAND_X} unlock
                 eval "${RESTIC_COMMAND_X} forget --prune --keep-within \"${BACKUP_KEEP_DAYS}d\""
                 if [[ $? != 0 ]]; then
                     color red "removing old snapshots failed"
