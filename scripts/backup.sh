@@ -218,6 +218,9 @@ function upload() {
         exit 1
     fi
 
+    color blue "list upload files"
+    find "${UPLOAD_FILE}" -ls
+
     # upload
     local HAS_ERROR="FALSE"
 

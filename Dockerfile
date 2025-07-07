@@ -13,7 +13,7 @@ COPY --from=restic/restic:0.18.0 /usr/bin/restic /usr/bin/restic
 
 RUN chmod +x /app/*.sh \
   && mkdir -m 777 /bitwarden \
-  && apk add --no-cache 7zip bash curl mariadb-client postgresql17-client sqlite supercronic s-nail tzdata \
+  && apk add --no-cache 7zip bash curl mariadb-client postgresql17-client sqlite supercronic s-nail tzdata coreutils findutils \
   && apk info --no-cache -Lq mariadb-client | grep -vE '/bin/mariadb$' | grep -vE '/bin/mariadb-dump$' | xargs -I {} rm -f "/{}" \
   && ln -sf "${LOCALTIME_FILE}" /etc/localtime \
   && addgroup -g "${USER_ID}" "${USER_NAME}" \
